@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-pipeline
+  labels:
+    run: console-pipeline
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: console-pipeline
+  template:
+    metadata:
+      labels:
+        run: console-pipeline
+    spec:
+      containers:
+      - image: registry.cn-shenzhen.aliyuncs.com/salex/console-pipeline:2023-06-21-08-41-14
+        name: console-pipeline # 容器名称
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console-pipeline
+spec:
+  ports:
+  - port: 80 #服务端口
+    protocol: TCP
+    targetPort: 80 #应用端口
+  selector:
+    run: console-pipeline
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: console-pipeline-ingress
+spec:
+  rules:
+  - host: console.tuohaixingpan.com
+    http:
+      paths:
+      # 老版本服务。
+      - path: /pipeline
+        backend:
+          service: 
+            name: console-pipeline
+            port:
+              number: 80
+        pathType: Prefix
