@@ -35,6 +35,10 @@ export default function config() {
         //  流水线面包屑
         pipeLineBreadcrumb: [
             {
+                title: '无人流水线',
+                key: 'unmannedAssemblyLine'
+            },
+            {
                 title: <Link to="/">{'流水线概览'}</Link>,
                 key: 'overview'
             },

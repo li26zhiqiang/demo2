@@ -87,7 +87,8 @@ export default function AddPipeLine(props) {
                     </Form.Item>
 
                     {children.map((item, index) => {
-                        const inputType = item.type === 'input' ? <Input autoComplete={'off'} /> : <TextArea rows={3} />;
+                        const inputType =
+                        item.type === 'input' ? <Input autoComplete={'off'} /> : <TextArea rows={3} />;
 
                         return (
                             <Form.Item key={index} name={item.name} label={item.label} rules={[{ required: true }]}>

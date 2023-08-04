@@ -36,6 +36,14 @@ body {
     background-color: #ebeef5;
 }
 
+#subapp-viewport {
+    height: 100%;
+}
+
+#__qiankun_microapp_wrapper_for_consolepipeline__ {
+    height: 100%;
+}
+
 #root_pipeline {
     height: 100%;
 }
@@ -82,4 +90,19 @@ body {
     .ant-modal-header {
         margin-bottom: 16px;
     }
+}
+
+.ant-layout-sider-trigger {
+    background: #fff !important;
+    .anticon {
+        color: #000;
+    }
+}
+
+.ant-layout-sider-trigger {
+    border-top: 1px solid rgba(5, 5, 5, 0.06);
+}
+
+.ant-spin-nested-loading, .ant-spin-container, .mainapp-main{
+    height: 100%;
 }

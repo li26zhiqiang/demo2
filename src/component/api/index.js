@@ -8,9 +8,9 @@ async function fetchPipeLineView({ url, method, parameter }) {
 
     let fetchParameter = {
         method,
-        headers: new Headers({
+        headers: {
             'Content-Type': 'application/json'
-        })
+        }
     };
 
     if (method !== 'GET') {

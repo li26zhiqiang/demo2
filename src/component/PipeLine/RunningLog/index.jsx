@@ -66,7 +66,7 @@ export default function RunningLog() {
                 title: '名称',
                 dataIndex: 'pipelineName',
                 render: (text, record) => {
-                    const url = `/pipeline/detail?name=${text}&id=${record?.id}`;
+                    const url = `/console/pipeline/detail?name=${text}&id=${record?.id}`;
                     return (
                         <span className={styles['running-log-pipeline-name']} onClick={() => open(url)}>
                             {text}

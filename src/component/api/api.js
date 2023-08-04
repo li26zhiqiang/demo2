@@ -71,7 +71,19 @@ function isInQueue(parameter) {
     return api.fetchPipeLineView({ url, method: 'GET', parameter });
 }
 
+function getLogView(parameter) {
+    const url = urls.logView;
+    return api.fetchPipeLineView({ url, method: 'GET', parameter });
+}
+
+//  获取用户信息和菜单
+function getUserInfo() {
+    const url = urls.getUserInfo;
+    return api.fetchPipeLineView({ url, method: 'GET' });
+}
+
 export {
+    getLogView,
     isInQueue,
     stopPipeLine,
     getRunningLog,
@@ -84,5 +96,6 @@ export {
     getSince,
     pipelineInfo,
     getProductInfo,
-    stopLastBuild
+    stopLastBuild,
+    getUserInfo
 };

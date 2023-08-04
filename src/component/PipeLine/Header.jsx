@@ -4,7 +4,8 @@ import { Popconfirm, Form, Button, Col, Row, Divider, Tooltip, message } from 'a
 import { PauseOutlined, CheckCircleOutlined, SyncOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import PipeLineStart from './PipeLineStart';
 import RunningLog from './RunningLog';
-import { pipelineInfo, stopPipeLine } from '../api/api';
+// import { pipelineInfo, stopPipeLine } from '../api/api';
+import { stopPipeLine } from '../api/api';
 import utils from '../utils/getUrlParameter';
 import styles from './index.less';
 
@@ -15,16 +16,17 @@ export default function Header(props) {
     const pipelineName = utils.getPipelineName();
     const pipelineId = utils.getPipelineId();
 
-    const [pipelineInformitration, setPipelineInformitration] = useState([]);
+    // const [pipelineInformitration, setPipelineInformitration] = useState([]);
+    const [pipelineInformitration] = useState([]);
 
 
-    async function getPipeLineInfo() {
-        const resp = await pipelineInfo();
+    // async function getPipeLineInfo() {
+    //     const resp = await pipelineInfo();
 
-        if (resp) {
-            setPipelineInformitration(resp?.data);
-        }
-    }
+    //     if (resp) {
+    //         setPipelineInformitration(resp?.data);
+    //     }
+    // }
 
     async function stop() {
 
@@ -60,7 +62,7 @@ export default function Header(props) {
 
     useEffect(() => {
         //  获取流水线的基本信息
-        getPipeLineInfo();
+        // getPipeLineInfo();
     }, []);
 
     const pipelineStatusVal = getPipelineStatus();
@@ -74,7 +76,15 @@ export default function Header(props) {
                     </Col>
                     <Col span={5}>
                         {!pipelineId && <div className={styles['pipeline-button-list']}>
-                            <PipeLineStart {...{ stage, form, getNewSince, pipelineName, isInQueueVal, building, checkoutIsInQueue }}/>
+                            <PipeLineStart
+                                {...{ stage,
+                                    form,
+                                    getNewSince,
+                                    pipelineName,
+                                    isInQueueVal,
+                                    building,
+                                    checkoutIsInQueue
+                                }}/>
                             <Divider type="vertical" />
                             <Popconfirm
                                 title="终止"
@@ -84,9 +94,13 @@ export default function Header(props) {
                                 cancelText="No"
                             >
                                 <Tooltip title="终止">
-                                    <Button disabled={!building || pipelineStatus === 'ABORTING'} icon={<PauseOutlined />} >终止</Button>
+                                    <Button
+                                        disabled={!building || pipelineStatus === 'ABORTING'}
+                                        icon={<PauseOutlined />}
+                                    >终止</Button>
                                 </Tooltip>
                             </Popconfirm>
+                            <Divider type="vertical" />
                         </div>}
                     </Col>
                     <Col span={3} offset={7} className={styles['pipeline-username-col']}>
@@ -111,7 +125,11 @@ export default function Header(props) {
                         {pipelineInformitration.map((item, index) => {
                             return (
                                 <Col span={4} key={index} >
-                                    <Form.Item className={styles['pipeline-col-formitem']} label={item.label} name={item.label}>
+                                    <Form.Item
+                                        className={styles['pipeline-col-formitem']}
+                                        label={item.label}
+                                        name={item.label}
+                                    >
                                         {item.value}
                                     </Form.Item>
                                 </Col>

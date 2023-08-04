@@ -19,7 +19,8 @@ export default function Product(props) {
             <Card hoverable bordered={false} className={styles['pipeline-product-view']}>
                 <Form form={form} layout="vertical">
                     {itemList.map((item, index) => {
-                        const inputType = item.type === 'input' ? <Input autoComplete={'off'} /> : <TextArea rows={3} />;
+                        const inputType =
+                            item.type === 'input' ? <Input autoComplete={'off'} /> : <TextArea rows={3} />;
 
                         return (
                             <Form.Item key={index} name={item.name} label={item.label} rules={[{ required: true }]}>

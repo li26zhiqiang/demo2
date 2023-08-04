@@ -10,4 +10,8 @@ function getPipelineId() {
     return id || '';
 }
 
-export default { getPipelineName, getPipelineId };
+function getRouter() {
+    return queryString.parse(window.location.search);
+}
+
+export default { getPipelineName, getPipelineId, getRouter };

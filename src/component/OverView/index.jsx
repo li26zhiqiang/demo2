@@ -13,27 +13,54 @@ export default function OverView() {
     const [currentPageSize, setCurrentPageSize] = useState(10);
     let timer = null;
 
-    async function getPipeLineList() {
-        const parameter = {
-            pageNum: currentPage,
-            pageSize: currentPageSize
-        };
-        const resp = await getPipeLineView(parameter);
+    // 校验如果表格里面没有build的数据，就不刷新表格了
+    function checkoutHasBuilding(records) {
+        const arr = records.filter(item => item.building);
 
-        if (resp) {
-            setDataSource(resp?.data?.records || []);
-            setTotal(resp?.data?.total || 0);
-        } else {
+        if (arr.length === 0 || checkoutIsThisPage()) {
+            clearInterval(timer);
+            timer = null;
+            return;
+        } else if (timer === null) {
+            timer = setInterval(() => {
+                getPipeLineList();
+            }, 8000);
+        }
+    }
+
+    // 校验是否当前页面
+    function checkoutIsThisPage() {
+        return window.location.pathname !== '/console/pipeline/mypipeline/overview';
+    }
+
+    async function getPipeLineList() {
+        try {
+            const parameter = {
+                pageNum: currentPage,
+                pageSize: currentPageSize
+            };
+            const resp = await getPipeLineView(parameter);
+
+            if (resp) {
+                checkoutHasBuilding(resp?.data?.records);
+                setDataSource(resp?.data?.records || []);
+                setTotal(resp?.data?.total || 0);
+            } else {
+                clearInterval(timer);
+                timer = null;
+            }
+        } catch (err) {
             clearInterval(timer);
             timer = null;
         }
+
     }
 
     useEffect(() => {
         getPipeLineList();
         timer = setInterval(() => {
             getPipeLineList();
-        }, 10000);
+        }, 8000);
 
         return () => clearInterval(timer);
     }, [currentPage, currentPageSize]);

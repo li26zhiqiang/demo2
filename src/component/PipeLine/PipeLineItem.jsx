@@ -1,11 +1,56 @@
 /* eslint-disable prettier/prettier */
-import React from 'react';
-import { Card, Timeline, Divider } from 'antd';
-import { SyncOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Spin, Card, Timeline, Divider, Tooltip, Modal, Button } from 'antd';
+import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-json';
+import 'ace-builds/src-noconflict/theme-github';
+import 'ace-builds/src-noconflict/ext-language_tools';
+import { SyncOutlined, CloseCircleOutlined, CheckCircleOutlined, SnippetsOutlined } from '@ant-design/icons';
+import { getLogView } from '../api/api';
 import styles from './index.less';
 
 export default function PipeLineItem(props) {
     const lines = props.itemList || [];
+    const [visible, setVisible] = useState(false);
+    const [logValue, setLogValue] = useState('');
+    const [selectStep, setSelectStep] = useState(null);
+    const [loading, setLoading] = useState(null);
+    const { pipelineRecord } = props;
+
+    function cancel() {
+        setVisible(false);
+    }
+
+    async function showModal(step) {
+        setVisible(true);
+        getLog(step);
+        setSelectStep(step);
+    }
+
+    async function getLog(step) {
+        if (!pipelineRecord || !step) {
+            return;
+        }
+
+        const {pipelineName, displayName} = pipelineRecord;
+        const parameter = {
+            name: pipelineName,
+            runId: displayName ? displayName.split('#')[1] : 0,
+            stageId: step?.id
+        };
+
+        setLoading(true);
+        const resp = await getLogView(parameter);
+        setLoading(false);
+
+        if (resp) {
+            setLogValue(resp?.data);
+        }
+    }
+
+    function refreshLog() {
+        getLog(selectStep);
+    }
 
     const dotDic = {
         //  成功（有结果）
@@ -67,16 +112,28 @@ export default function PipeLineItem(props) {
         <>
             <Card hoverable bordered={true} className={styles['pipeline-product-view']}>
                 {lines.map((item, index) => {
+
                     return (
                         <div key={index}>
                             <p>{item.label}</p>
                             <div className={styles['pipeline-product-timeline']}>
                                 <Timeline
                                     key={index}
-                                    items={item.value.map((children) => {
+                                    items={item.value.map((step) => {
+
                                         return {
-                                            ...dotDic[children.status],
-                                            ...children
+                                            ...dotDic[step.status],
+                                            ...step,
+                                            children: <div className={styles['pipeline-step-view']}>
+                                                {step.children}
+                                                {step?.id && <Tooltip title="日志">
+                                                    <span className={styles['pipeline-log-view']} onClick={() => {
+                                                        showModal(step);
+                                                    }}>
+                                                        <SnippetsOutlined />
+                                                    </span>
+                                                </Tooltip>}
+                                            </div>
                                         };
                                     })}
                                 />
@@ -86,6 +143,26 @@ export default function PipeLineItem(props) {
                     );
                 })}
             </Card>
+
+            <Modal
+                open={visible}
+                onCancel={cancel}
+                title="查看日志"
+                footer={[null]}
+                width={1080}
+            >
+                <Button style={{ marginBottom: '16px' }} type={'primary'} onClick={() => refreshLog()}>{'刷新'}</Button>
+                <Spin spinning={loading}>
+                    <AceEditor
+                        mode="json"
+                        theme="github"
+                        name="pipelineJson"
+                        value={logValue}
+                        width='100%'
+                        splits={1}
+                    />
+                </Spin>
+            </Modal>
         </>
     );
 }

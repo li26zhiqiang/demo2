@@ -6,6 +6,8 @@ import { ConfigProvider } from 'antd';
 import App from './App';
 import actions from './actions';
 import { ROOT_PATH } from './utils/constant';
+// import { Provider } from './utils/commonContext';
+// import { getUserInfo } from './component/api/api';
 import './index.css';
 
 let rootNode = null;
@@ -14,16 +16,24 @@ function getSubRootContainer(container) {
     return container ? container.querySelector('#root_pipeline') : document.querySelector('#root_pipeline');
 }
 
-function renderApp(props) {
+async function renderApp(props) {
     const { container } = props;
     rootNode = ReactDOM.createRoot(getSubRootContainer(container));
 
-    console.log('window.__POWERED_BY_QIANKUN__', window.__POWERED_BY_QIANKUN__);
+    // let menu = [];
+    // const res = await getUserInfo();
+
+    // if (res && res.code === 200) {
+    //     menu = res?.data?.menus || [];
+    // }
+
     rootNode.render(
-        <ConfigProvider theme={{ token: { colorPrimary: '#409EFF' } }}>
+        <ConfigProvider theme={{ token: { colorPrimary: '#18b3b3' } }}>
+            {/* <Provider value={menu}> */}
             <BrowserRouter basename={window.__POWERED_BY_QIANKUN__ ? '/console/pipeline' : '/pipeline'}>
                 <App {...props} />
             </BrowserRouter>
+            {/* </Provider> */}
         </ConfigProvider>
     );
 }

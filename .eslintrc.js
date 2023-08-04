@@ -257,7 +257,7 @@ module.exports = {
         'key-spacing': [0, { beforeColon: false, afterColon: true }], //对象字面量中冒号的前后空格
         'lines-around-comment': 0, //行前/行后备注
         'max-depth': [0, 4], //嵌套块深度
-        'max-len': [0, 80, 4], //字符串最大长度
+        'max-len': [2, 120], //字符串最大长度
         'max-nested-callbacks': [0, 2], //回调嵌套深度
         'max-params': [0, 3], //函数最多只能有3个参数
         'max-statements': [0, 10], //函数内最多有几个声明

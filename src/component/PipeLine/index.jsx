@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { Breadcrumb, Alert, Form, Card } from 'antd';
+import { Alert, Form, Card } from 'antd';
 import ProSkeleton from '@ant-design/pro-skeleton';
 import { SyncOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import Header from './Header';
@@ -10,6 +10,7 @@ import config from './config';
 import utils from '../utils/getUrlParameter';
 import { getPipeLineList, getDescribe, getSince, getProductInfo, isInQueue } from '../api/api';
 import styles from './index.less';
+import BreadcrumbComp from '../HeaderMenu/BreadcrumbComp';
 
 export default function PipeLine() {
     const { product, pipeLineBreadcrumb } = config();
@@ -24,6 +25,7 @@ export default function PipeLine() {
     const [isInQueueVal, setIsInQueueVal] = useState(false);
     let queueTimer = null;
     let sinceTimer = null;
+    let pipelineGoods = null;
 
     async function pipeLineStages() {
         const resp = await getPipeLineList({ name: pipelineName });
@@ -38,6 +40,7 @@ export default function PipeLine() {
             name: pipelineName,
             displayName: id
         };
+
         if (!id) {
             return;
         }
@@ -50,25 +53,37 @@ export default function PipeLine() {
 
     //  获取since
     async function getNewSince({ type }) {
-        const parameter = {
-            ...{name: pipelineName},
-            ...{runId: type !== 'create' && pipelineId ? pipelineId: 0}
-        };
+        try {
+            const parameter = {
+                ...{name: pipelineName},
+                ...{runId: type !== 'create' && pipelineId ? pipelineId: 0}
+            };
 
-        const resp = await getSince(parameter);
+            const resp = await getSince(parameter);
+            if (resp) {
+                const { displayName, building } = resp.data;
 
-        if (resp && resp?.data) {
-            const { displayName, building } = resp.data;
-            const id = displayName.split('#')[1];
+                const id = displayName ? displayName.split('#')[1] : 0;
 
-            if (!building) {
+                if (!building || checkoutIsThisPage()) {
+                    clearInterval(sinceTimer);
+                    sinceTimer = null;
+                }
+                //  获取一共有多少
+                pipeLines({ id });
+                setSince(id);
+                setPipelineRecord(resp.data);
+
+                if (!pipelineGoods) {
+                    getProductGoods(id);
+                }
+            } else {
                 clearInterval(sinceTimer);
                 sinceTimer = null;
             }
-            //  获取一共有多少
-            pipeLines({ id });
-            setSince(id);
-            setPipelineRecord(resp.data);
+        } catch (err) {
+            clearInterval(sinceTimer);
+            sinceTimer = null;
         }
     }
 
@@ -81,7 +96,8 @@ export default function PipeLine() {
 
                 return {
                     children: title,
-                    status: stageObj?.status || 'NOT_BUILT'
+                    status: stageObj?.status || 'NOT_BUILT',
+                    id: stageObj?.id
                 };
             });
 
@@ -153,14 +169,15 @@ export default function PipeLine() {
     }
 
     //  获取product 商品，规格，描述
-    async function getProductGoods() {
+    async function getProductGoods(id) {
         const param = {
-            name: pipelineName
+            name: pipelineName,
+            runId: id
         };
         const resp = await getProductInfo(param);
 
-        if (resp && resp.data && resp.data.length > 0) {
-            const {goods, goodsDesc, goodsFlavor} = resp.data[0];
+        if (resp && resp.data) {
+            const {goods, goodsDesc, goodsFlavor} = resp.data;
 
             const goodsVal = {
                 goods: goods || '',
@@ -168,25 +185,45 @@ export default function PipeLine() {
                 goodsFlavor: goodsFlavor || ''
             };
             setGoodsInfo(goodsVal);
+            pipelineGoods = true;
         }
+    }
+
+    //  判断是否当前页
+    function checkoutIsThisPage() {
+        return window.location.pathname !== '/console/pipeline/detail';
     }
 
     //  判断是否在队列中
     async function getIsInQueue({ type }) {
-        const resp = await isInQueue({ name: pipelineName });
+        try {
+            const resp = await isInQueue({ name: pipelineName });
 
-        if (resp) {
+            if (resp) {
             //  如果是true表明在队列中
-            if (resp.data) {
-                setIsInQueueVal(true);
-                setPipelineRecord(false);
-                setStage([]);
-            } else if (!resp.data) {
+                if (resp.data) {
+                    setIsInQueueVal(true);
+                    setPipelineRecord(false);
+                    setStage([]);
+
+                    if (checkoutIsThisPage()) {
+                        clearInterval(queueTimer);
+                        queueTimer = null;
+                    }
+                } else if (!resp.data) {
                 //  如果是false表明不在队列中
-                setIsInQueueVal(false);
+                    setIsInQueueVal(false);
+                    clearInterval(queueTimer);
+                    queueTimer = null;
+                    setNewSince({ type });
+                }
+            } else {
                 clearInterval(queueTimer);
-                setNewSince({ type });
+                queueTimer = null;
             }
+        } catch (err) {
+            clearInterval(queueTimer);
+            queueTimer = null;
         }
     }
 
@@ -203,7 +240,6 @@ export default function PipeLine() {
     useEffect(() => {
         checkoutIsInQueue({type: 'query'});
         pipeLineStages();
-        getProductGoods();
 
         return () => {
             clearInterval(sinceTimer);
@@ -226,30 +262,36 @@ export default function PipeLine() {
     };
 
     return (
-        <div className={styles['pipeline-view']}>
-            <Breadcrumb items={pipeLineBreadcrumb} className={styles['pipeline-breadcrumb']}/>
-            <Card style={{ height: '100%' }}>
-                <div className={styles['pipeline-continue-view']}>
-                    <Header {...parameter} />
-                    {isInQueueVal && <Alert
-                        message={'当前任务正在排队中，请等待...'}
-                        type="info"
-                        icon={isInQueueVal ? <SyncOutlined spin />: <InfoCircleOutlined />}
-                        showIcon
-                    />
-                    }
-                    {pipes.length > 0 ? (
-                        <div className={styles['pipeline-continue-body-view']}>
-                            <div className={styles['pipeline-continue-body']} style={{ width: `${pipes.length * 260}px` }}>
-                                <PipeLineHeader {...parameter} />
-                                <PipeLineView {...parameter} />
+        <>
+            <BreadcrumbComp {...{ item: pipeLineBreadcrumb }}/>
+            <div className={styles['pipeline-view']}>
+
+                <Card style={{ height: '100%' }}>
+                    <div className={styles['pipeline-continue-view']}>
+                        <Header {...parameter} />
+                        {isInQueueVal && <Alert
+                            message={'当前任务正在排队中，请等待...'}
+                            type="info"
+                            icon={isInQueueVal ? <SyncOutlined spin />: <InfoCircleOutlined />}
+                            showIcon
+                        />
+                        }
+                        {pipes.length > 0 ? (
+                            <div className={styles['pipeline-continue-body-view']}>
+                                <div
+                                    className={styles['pipeline-continue-body']}
+                                    style={{ width: `${pipes.length * 260}px` }}>
+                                    <PipeLineHeader {...parameter} />
+                                    <PipeLineView {...parameter} />
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <ProSkeleton type={'descriptions'} active list={2} />
-                    )}
-                </div>
-            </Card>
-        </div>
+                        ) : (
+                            <ProSkeleton type={'descriptions'} active list={2} />
+                        )}
+                    </div>
+                </Card>
+            </div>
+        </>
+
     );
 }

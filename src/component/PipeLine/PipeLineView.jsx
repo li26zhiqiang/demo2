@@ -5,7 +5,7 @@ import Product from './Product';
 import PipeLineItem from './PipeLineItem';
 
 export default function PipeLineView(props) {
-    const { pipeLineList, form, goodsInfo } = props;
+    const { pipeLineList, form, goodsInfo, pipelineRecord } = props;
     return (
         <>
             <Row>
@@ -13,12 +13,14 @@ export default function PipeLineView(props) {
                     const parm = {
                         form,
                         ...item,
-                        goodsInfo
+                        goodsInfo,
+                        pipelineRecord
                     };
+
                     if (index === 0) {
                         return <Product {...parm} key={index} />;
                     } else {
-                        return <PipeLineItem {...item} key={index} />;
+                        return <PipeLineItem {...parm} key={index} />;
                     }
                 })}
             </Row>
